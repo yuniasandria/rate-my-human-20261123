@@ -21,9 +21,17 @@ def main() -> None:
     target.write_text(text, encoding="utf-8")
     # Read back and verify: the gate requires exactly one line of 1-200
     # characters, so refuse to pass silently if the file ever differs.
+    # read_text with encoding="utf-8" raises on invalid UTF-8, and the
+    # explicit checks below cover length, single-line, and non-blank.
     written = target.read_text(encoding="utf-8")
-    if written != text or "\n" in written:
-        raise SystemExit("entry.txt did not round-trip as a single line")
+    if written != text:
+        raise SystemExit("entry.txt did not round-trip unchanged")
+    if not 1 <= len(written) <= 200:
+        raise SystemExit(f"written entry must be 1-200 characters, got {len(written)}")
+    if "\n" in written or "\r" in written:
+        raise SystemExit("written entry must be exactly one line")
+    if not written.strip():
+        raise SystemExit("written entry must not be whitespace-only")
 
 
 if __name__ == "__main__":
